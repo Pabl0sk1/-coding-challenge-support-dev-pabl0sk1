@@ -55,11 +55,14 @@ export default function Dashboard() {
         // BUG 2 INTENCIONAL: Mutación de estado de React
         // Se altera el arreglo original en lugar de crear uno nuevo.
         // Esto causa que React no detecte el cambio y no vuelva a renderizar la UI inmediatamente.
-        const ticketIndex = tickets.findIndex((t) => t.id === updatedTicket.id)
-        if (ticketIndex !== -1) {
-          tickets[ticketIndex] = updatedTicket
-          setTickets(tickets) // React no verá esto como un cambio de estado válido
-        }
+        // const ticketIndex = tickets.findIndex((t) => t.id === updatedTicket.id)
+        // if (ticketIndex !== -1) {
+        //   tickets[ticketIndex] = updatedTicket
+        //   setTickets(tickets) // React no verá esto como un cambio de estado válido
+        // }
+        setTickets((prevTickets) =>
+          prevTickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t))
+        )
       }
     } catch (error) {
       console.error("Error resolving ticket:", error)
@@ -91,7 +94,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 pb-20">
         <div className="mb-6 flex justify-between items-end">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Tickets Asignados</h2>

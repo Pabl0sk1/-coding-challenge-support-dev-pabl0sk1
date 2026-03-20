@@ -8,6 +8,11 @@ async function sendEmailNotification(ticketId: string, companyId: string) {
   return new Promise((resolve) => {
     console.log(`Enviando notificación urgente para el ticket ${ticketId}...`)
     // Falta: resolve() o hay un error de lógica
+    // simulamos envío y resolvemos inmediatamente
+    setTimeout(() => {
+      console.log(`Notificación enviada para ${ticketId}`)
+      resolve(true)
+    }, 0)
   })
 }
 
@@ -30,7 +35,7 @@ export async function PATCH(
 
     if (ticket.priority === 'Urgente' && status === 'Resuelto') {
       // Bug 3: Se queda esperando infinitamente
-      await sendEmailNotification(ticket.id, ticket.companyId)
+      sendEmailNotification(ticket.id, ticket.companyId).catch((err) => console.error('Error sending notification:', err))
     }
 
     const updatedTicket = await prisma.ticket.update({
