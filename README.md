@@ -33,88 +33,111 @@ Acabas de iniciar tu día y recibes el siguiente mensaje por Slack de José (Pro
 
 **Nota:** Tienes total libertad de usar herramientas de IA para apoyarte. Lo que nos importa es cómo analizas el problema, cómo guías a la IA y la calidad de la solución final. ¡Éxitos!
 
-🐞 Problemas identificados y soluciones
-🧩 1. Botón "Resolver" no funciona en móviles
+---
 
-Causa:
-El footer fijo ocultaba el último ticket, bloqueando la interacción.
+## 🐞 Problemas identificados y soluciones
 
-Solución:
-Se agregó padding inferior al contenedor principal.
+### 🧩 1. Botón "Resolver" no funciona en móviles
 
+**Causa:** El footer fijo ocultaba el último ticket, bloqueando la interacción táctil en dispositivos móviles.
+
+**Solución:** Se agregó `padding-bottom` al contenedor principal para que el contenido no quede oculto detrás del footer.
+
+```jsx
 <main className="max-w-3xl mx-auto px-4 py-6 pb-20">
+```
 
-Resultado:
-El botón es accesible en dispositivos móviles.
+**Resultado:** ✅ El botón es accesible en todos los dispositivos móviles.
 
-🔄 2. UI no se actualiza al resolver un ticket
+---
 
-Causa:
-Mutación directa del estado de React.
+### 🔄 2. UI no se actualiza al resolver un ticket
 
-Solución:
-Se implementó actualización inmutable:
+**Causa:** Se estaba realizando una mutación directa del estado de React, lo que impedía que el componente detectara los cambios y se re-renderizara.
 
+**Solución:** Se implementó una actualización inmutable del estado usando el patrón funcional de `setState`:
+
+```js
 setTickets((prevTickets) =>
-prevTickets.map((t) =>
-t.id === updatedTicket.id ? updatedTicket : t
-)
-)
+  prevTickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)),
+);
+```
 
-Resultado:
-La UI se actualiza en tiempo real sin recargar.
+**Resultado:** ✅ La UI se actualiza en tiempo real sin necesidad de recargar la página.
 
-⏳ 3. Tickets urgentes se quedan en carga infinita
+---
 
-Causa:
-Promesa sin resolve() bloqueando el request.
+### ⏳ 3. Tickets urgentes se quedan en carga infinita
 
-Solución:
+**Causa:** Una `Promise` sin `resolve()` bloqueaba el request indefinidamente, dejando los tickets urgentes en un estado de carga infinita.
 
-Se corrigió la promesa
-Se evitó bloquear el request eliminando await
+**Solución:** Se corrigió la promesa para que resuelva inmediatamente y se eliminó el `await` sobre `setTimeout`, permitiendo que el proceso de notificación corra en segundo plano sin bloquear el flujo principal:
+
+```js
 setTimeout(() => {
-resolve(true)
-}, 0)
-sendEmailNotification(ticket.id, ticket.companyId)
-.catch((err) => console.error('Error sending notification:', err))
+  resolve(true);
+}, 0);
 
-Resultado:
+sendEmailNotification(ticket.id, ticket.companyId).catch((err) =>
+  console.error("Error sending notification:", err),
+);
+```
 
-Se elimina el bloqueo
-Mejor rendimiento y UX
-Simulación de procesos asíncronos reales
-🔐 4. Fuga de datos entre empresas
+**Resultado:**
 
-Causa:
-Consulta sin filtro por empresa.
+- ✅ Se elimina el bloqueo en tickets urgentes
+- ✅ Mejor rendimiento y UX general
+- ✅ Simulación correcta de procesos asíncronos reales
 
-Solución:
+---
 
-const user = { companyId: 'TechCorp' }
+### 🔐 4. Fuga de datos entre empresas
+
+**Causa:** La consulta a la base de datos no incluía un filtro por empresa (`companyId`), lo que permitía que un usuario pudiera acceder a tickets de otras organizaciones.
+
+**Solución:** Se agregó el filtro `companyId` proveniente del usuario autenticado directamente en la consulta de Prisma:
+
+```js
+const user = { companyId: "TechCorp" };
 
 const tickets = await prisma.ticket.findMany({
-where: { companyId: user.companyId },
-orderBy: { createdAt: 'desc' },
-})
+  where: {
+    companyId: user.companyId,
+  },
+  orderBy: {
+    createdAt: "desc",
+  },
+});
+```
 
-Resultado:
-Se evita acceso a datos de otras empresas.
+**Resultado:** ✅ Se evita completamente el acceso a datos de otras empresas, garantizando el aislamiento de datos por tenant.
 
-🚀 Mejoras adicionales
-Manejo de errores más claro en backend
-Código más mantenible y predecible
-Preparado para autenticación real
-Mejor experiencia de usuario
-🔮 Consideraciones futuras
-Implementar autenticación real (JWT / sesión)
-Uso de colas para tareas async (emails, notificaciones)
-Paginación de tickets
-Feedback visual (toasts, estados de carga)
-🎯 Conclusión
+---
 
-Se resolvieron los problemas críticos priorizando:
+## 🚀 Mejoras adicionales
 
-Integridad de datos
-Experiencia de usuario
-Estabilidad del sistema
+- 🛡️ Manejo de errores más claro y descriptivo en el backend
+- 🧹 Código más mantenible y predecible
+- 🔑 Arquitectura preparada para integrar autenticación real
+- 💡 Mejor experiencia de usuario en flujos críticos
+
+---
+
+## 🔮 Consideraciones futuras
+
+| Mejora                | Descripción                                        |
+| --------------------- | -------------------------------------------------- |
+| 🔑 Autenticación real | Implementar JWT o manejo de sesiones               |
+| 📬 Colas de tareas    | Usar colas para emails y notificaciones async      |
+| 📄 Paginación         | Paginar la lista de tickets para mejor performance |
+| 🎨 Feedback visual    | Agregar toasts y estados de carga explícitos       |
+
+---
+
+## 🎯 Conclusión
+
+Se resolvieron los problemas críticos priorizando tres pilares fundamentales:
+
+```
+Integridad de datos  →  Experiencia de usuario  →  Estabilidad del sistema
+```
